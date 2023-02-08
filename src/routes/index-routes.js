@@ -94,7 +94,14 @@ async function registerRoute(req, res) {
   return res.render('error');
 }
 
+function login(req, res) {
+  return res.render('login');
+}
+
 indexRouter.get('/', catchErrors(indexRoute));
+
+indexRouter.get('/login', login);
+
 indexRouter.get('/:slug', catchErrors(eventRoute));
 indexRouter.post(
   '/:slug',
