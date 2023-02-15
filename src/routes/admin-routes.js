@@ -10,6 +10,7 @@ import {
 } from '../lib/db.js';
 import passport, { ensureLoggedIn } from '../lib/login.js';
 import { slugify } from '../lib/slugify.js';
+import { findByUsername } from '../lib/users.js';
 import {
   registrationValidationMiddleware,
   sanitizationMiddleware,
@@ -179,6 +180,19 @@ async function eventRoute(req, res, next) {
   });
 }
 
+async function checkIfAdmin(req, res, next) {
+  const userTryingToLogIn = await findByUsername(req.body.username);
+
+  if (!userTryingToLogIn || !userTryingToLogIn.isadmin) {
+    res.render('login', {
+      message: 'Vitlaust notendanafn',
+      title: 'Innskráning',
+    });
+  } else {
+    next();
+  }
+}
+
 adminRouter.get('/', ensureLoggedIn, catchErrors(index));
 adminRouter.post(
   '/',
@@ -193,11 +207,7 @@ adminRouter.post(
 adminRouter.get('/login', login);
 adminRouter.post(
   '/login',
-  (req, res) => {
-    console.log(req.body);
-    console.log(res.user);
-    console.log(res.locals);
-  },
+  checkIfAdmin,
 
   // Þetta notar strat að ofan til að skrá notanda inn
   passport.authenticate('local', {
