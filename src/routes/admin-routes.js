@@ -193,6 +193,11 @@ adminRouter.post(
 adminRouter.get('/login', login);
 adminRouter.post(
   '/login',
+  (req, res) => {
+    console.log(req.body);
+    console.log(res.user);
+    console.log(res.locals);
+  },
 
   // Þetta notar strat að ofan til að skrá notanda inn
   passport.authenticate('local', {
