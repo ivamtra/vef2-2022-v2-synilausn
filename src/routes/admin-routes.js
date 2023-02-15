@@ -32,7 +32,7 @@ async function index(req, res) {
   });
 }
 
-function login(req, res) {
+export function login(req, res) {
   if (req.isAuthenticated()) {
     return res.redirect('/admin');
   }
@@ -208,8 +208,13 @@ adminRouter.post(
 
 adminRouter.get('/logout', (req, res) => {
   // logout hendir session cookie og session
-  req.logout();
-  res.redirect('/');
+  req.logout((err) => {
+    if (err) {
+      console.error(err);
+    } else {
+      res.redirect('/');
+    }
+  });
 });
 
 // Verður að vera seinast svo það taki ekki yfir önnur route
