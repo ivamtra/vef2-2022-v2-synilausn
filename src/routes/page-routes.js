@@ -10,7 +10,6 @@ import { getEventsByPage } from '../lib/db.js';
 export const pageRouter = express.Router();
 
 async function pageRoute(req, res) {
-  console.log(req.originalUrl);
   const { number } = req.params;
   const events = await getEventsByPage(number);
 
@@ -33,6 +32,19 @@ async function adminPageRoute(req, res) {
   // Sýna admin síðuna
   // Annars
   // Redirect á venjulega síðu
+
+  const { number } = req.params;
+  const events = await getEventsByPage(number);
+  const { user: { username } = {} } = req || {};
+
+  return res.render('admin', {
+    username,
+    events,
+    errors: [],
+    data: {},
+    title: 'Viðburðir — umsjón',
+    admin: true,
+  });
 }
 
-pageRouter.get('/:number', catchErrors(pageRoute));
+pageRouter.get('/:number', catchErrors(adminPageRoute), catchErrors(pageRoute));

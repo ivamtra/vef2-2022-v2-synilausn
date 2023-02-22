@@ -1,18 +1,44 @@
 import express from 'express';
 import { validationResult } from 'express-validator';
 import { catchErrors } from '../lib/catch-errors.js';
-import { listEvent, listEvents, listRegistered, register } from '../lib/db.js';
+import {
+  getEventsByPage,
+  listEvent,
+  listEvents,
+  listRegistered,
+  register,
+} from '../lib/db.js';
 import {
   registrationValidationMiddleware,
   sanitizationMiddleware,
   xssSanitizationMiddleware,
 } from '../lib/validation.js';
-import { pageRouter } from './page-routes.js';
 
 export const indexRouter = express.Router();
 
 // Tengja við paging
-indexRouter.use('/page', pageRouter);
+async function pageRoute(req, res) {
+  const { number } = req.params;
+  const events = await getEventsByPage(number);
+
+  console.log(events);
+
+  const { user: { username } = {} } = req || {};
+  const prev = parseInt(number) - 1;
+  const next = parseInt(number) + 1;
+  const body = {
+    user: username,
+    title: 'Viðburðasíðan',
+    admin: false,
+    events,
+    prev,
+    next,
+    loginInfo: `Skráður inn sem ${username}`,
+  };
+  if (!username) body.loginInfo = 'Ekki skráður inn';
+
+  res.render('index', body);
+}
 
 async function indexRoute(req, res) {
   res.redirect('/page/1');
@@ -21,7 +47,6 @@ async function indexRoute(req, res) {
 async function eventRoute(req, res, next) {
   const { slug } = req.params;
   const event = await listEvent(slug);
-  console.log(event);
 
   if (!event) {
     return next();
@@ -108,7 +133,7 @@ function ensureUserLoggedIn(req, res, next) {
 }
 
 indexRouter.get('/', redirectIfAdmin, catchErrors(indexRoute));
-
+indexRouter.get('/page/:number', pageRoute);
 indexRouter.get('/:slug', catchErrors(eventRoute));
 indexRouter.post(
   '/:slug',

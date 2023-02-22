@@ -52,12 +52,24 @@ passport.deserializeUser(async (id, done) => {
 
 // Hjálpar middleware sem athugar hvort notandi sé innskráður og hleypir okkur
 // þá áfram, annars sendir á /login
-export function ensureLoggedIn(req, res, next) {
+// eslint-disable-next-line consistent-return
+export function ensureAdminLoggedIn(req, res, next) {
   if (req.isAuthenticated()) {
-    return next();
-  }
+    try {
+      if (req.user.isadmin) {
+        next();
+      } else {
+        return res.redirect('/admin/login');
+      }
+    } catch (err) {
+      console.error(err);
+      return res.redirect('/admin/login');
+    }
+  } else res.redirect('/admin/login');
+}
 
-  return res.redirect('/admin/login');
+export function isAdmin(req) {
+  return req?.user?.isadmin;
 }
 
 export default passport;
