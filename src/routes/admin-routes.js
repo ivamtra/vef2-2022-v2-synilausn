@@ -3,6 +3,7 @@ import { validationResult } from 'express-validator';
 import { catchErrors } from '../lib/catch-errors.js';
 import {
   createEvent,
+  deleteEvent,
   listEvent,
   listEventByName,
   listEvents,
@@ -16,8 +17,12 @@ import {
   sanitizationMiddleware,
   xssSanitizationMiddleware,
 } from '../lib/validation.js';
+import { pageRouter } from './page-routes.js';
 
 export const adminRouter = express.Router();
+
+// Tengja við paging
+adminRouter.use('/page', pageRouter);
 
 async function index(req, res) {
   const events = await listEvents();
@@ -127,11 +132,15 @@ async function validationCheckUpdate(req, res, next) {
   return next();
 }
 
+// TODO: Bæta við URL og Location
 async function registerRoute(req, res) {
-  const { name, description } = req.body;
+  console.log(req.body);
+  const { name, description, location, url } = req.body;
   const slug = slugify(name);
 
-  const created = await createEvent({ name, slug, description });
+  const created = await createEvent({ name, slug, description, location, url });
+
+  console.log(created);
 
   if (created) {
     return res.redirect('/admin');
@@ -154,11 +163,32 @@ async function updateRoute(req, res) {
     description,
   });
 
+  console.log(updated);
+
   if (updated) {
-    return res.redirect('/admin');
+    return res.redirect('/admin', { title: 'Viðburðir — umsjón' });
   }
 
   return res.render('error');
+}
+
+// TODO
+export function redirectIfNotAdmin(req, res, next) {
+  // const { user: { username } = {} } = req || {};
+  console.log(req.user);
+  if (!req.user?.isadmin || !req.user) {
+    res.redirect('/');
+  } else next();
+}
+
+// TODO: aðferð til að eyða viðburð
+async function deleteEventRoute(req, res, next) {
+  console.log('Delete attempt');
+  const { slug } = req.params;
+  console.log(req.params.slug);
+  const result = await deleteEvent(slug);
+  console.log(result);
+  next();
 }
 
 async function eventRoute(req, res, next) {
@@ -176,16 +206,24 @@ async function eventRoute(req, res, next) {
     title: `${event.name} — Viðburðir — umsjón`,
     event,
     errors: [],
-    data: { name: event.name, description: event.description },
+    data: {
+      name: event.name,
+      description: event.description,
+      location: event.location,
+      url: event.url,
+    },
   });
 }
 
-async function checkIfAdmin(req, res, next) {
+export async function checkIfAdminLogIn(req, res, next) {
   const userTryingToLogIn = await findByUsername(req.body.username);
+  // console.log(userTryingToLogIn);
+
+  console.log(userTryingToLogIn.id);
 
   if (!userTryingToLogIn || !userTryingToLogIn.isadmin) {
     res.render('login', {
-      message: 'Vitlaust notendanafn',
+      message: 'Notandanafn eða lykilorð vitlaust',
       title: 'Innskráning',
     });
   } else {
@@ -193,7 +231,7 @@ async function checkIfAdmin(req, res, next) {
   }
 }
 
-adminRouter.get('/', ensureLoggedIn, catchErrors(index));
+adminRouter.get('/', ensureLoggedIn, redirectIfNotAdmin, catchErrors(index));
 adminRouter.post(
   '/',
   ensureLoggedIn,
@@ -207,7 +245,7 @@ adminRouter.post(
 adminRouter.get('/login', login);
 adminRouter.post(
   '/login',
-  checkIfAdmin,
+  checkIfAdminLogIn,
 
   // Þetta notar strat að ofan til að skrá notanda inn
   passport.authenticate('local', {
@@ -231,6 +269,12 @@ adminRouter.get('/logout', (req, res) => {
     }
   });
 });
+
+//!
+//TODO: Virkar að deleta ef maður er loggaður inn venjulega
+adminRouter.get('/delete/:slug', ensureLoggedIn, deleteEventRoute, (req, res) =>
+  res.redirect('/admin')
+);
 
 // Verður að vera seinast svo það taki ekki yfir önnur route
 adminRouter.get('/:slug', ensureLoggedIn, catchErrors(eventRoute));

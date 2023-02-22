@@ -5,12 +5,29 @@
 <%- include('events') -%>
 
 <div class="link">
-  <a class="link__link" href="/admin">Innskráning</a>
+  <a class="link__link" href="/admin">Innskráning stjórnenda</a>
+</div>
+
+<div class="link">
+  <a class="link__link" href="/user/login">Innskráning notenda</a>
 </div>
 
 <div class="link">
   <a class="link__link" href="/user/register">Nýskráning</a>
 </div>
+
+
+<% if (user) { %>
+
+
+<div class="user">
+  <p class="user__loggedin">Innskráður sem: <strong><%= user %></strong></p>
+  <p class="user__logout"><a href="/admin/logout">Útskrá</a></p>
+</div>
+
+
+<% } %>
+
 
 
 <%- include('footer') -%>

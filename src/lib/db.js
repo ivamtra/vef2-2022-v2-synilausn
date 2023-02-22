@@ -57,15 +57,21 @@ export async function dropSchema(dropFile = DROP_SCHEMA_FILE) {
   return query(data.toString('utf-8'));
 }
 
-export async function createEvent({ name, slug, description } = {}) {
+export async function createEvent({
+  name,
+  slug,
+  description,
+  location,
+  url,
+} = {}) {
   const q = `
     INSERT INTO events
-      (name, slug, description)
+      (name, slug, description, location, url)
     VALUES
-      ($1, $2, $3)
-    RETURNING id, name, slug, description;
+      ($1, $2, $3, $4, $5)
+    RETURNING id, name, slug, description, location, url;
   `;
-  const values = [name, slug, description];
+  const values = [name, slug, description, location, url];
   const result = await query(q, values);
 
   if (result && result.rowCount === 1) {
@@ -76,20 +82,39 @@ export async function createEvent({ name, slug, description } = {}) {
 }
 
 // Updatear ekki description, erum ekki að útfæra partial update
-export async function updateEvent(id, { name, slug, description } = {}) {
+export async function updateEvent(
+  id,
+  { name, slug, description, location, url } = {}
+) {
   const q = `
     UPDATE events
       SET
         name = $1,
         slug = $2,
         description = $3,
+        location = $4,
+        url = $5,
         updated = CURRENT_TIMESTAMP
     WHERE
-      id = $4
-    RETURNING id, name, slug, description;
+      id = $6
+    RETURNING id, name, slug, description, location, url;
   `;
-  const values = [name, slug, description, id];
+  const values = [name, slug, description, location, url, id];
   const result = await query(q, values);
+
+  if (result && result.rowCount === 1) {
+    return result.rows[0];
+  }
+
+  return null;
+}
+
+// TODO
+export async function deleteEvent(slug) {
+  const q = `DELETE FROM events
+             WHERE slug = $1
+             RETURNING id, name, slug, description`;
+  const result = await query(q, [slug]);
 
   if (result && result.rowCount === 1) {
     return result.rows[0];
@@ -137,7 +162,7 @@ export async function listEvents() {
 export async function listEvent(slug) {
   const q = `
     SELECT
-      id, name, slug, description, created, updated
+      id, name, slug, description, created, updated, location, url
     FROM
       events
     WHERE slug = $1
@@ -191,4 +216,20 @@ export async function listRegistered(event) {
 
 export async function end() {
   await pool.end();
+}
+
+export async function getEventsByPage(number) {
+  // number = 1 gefur fyrstu síðuna
+  const offset = 10 * (number - 1);
+  const q = `SELECT id, name, slug, description, created, updated
+              FROM events
+              ORDER BY created
+              DESC LIMIT 10 OFFSET ${offset};`;
+  const result = await query(q);
+
+  if (result) {
+    return result.rows;
+  }
+
+  return null;
 }

@@ -7,22 +7,21 @@ import {
   sanitizationMiddleware,
   xssSanitizationMiddleware,
 } from '../lib/validation.js';
+import { pageRouter } from './page-routes.js';
 
 export const indexRouter = express.Router();
 
-async function indexRoute(req, res) {
-  const events = await listEvents();
+// Tengja við paging
+indexRouter.use('/page', pageRouter);
 
-  res.render('index', {
-    title: 'Viðburðasíðan',
-    admin: false,
-    events,
-  });
+async function indexRoute(req, res) {
+  res.redirect('/page/1');
 }
 
 async function eventRoute(req, res, next) {
   const { slug } = req.params;
   const event = await listEvent(slug);
+  console.log(event);
 
   if (!event) {
     return next();
@@ -94,11 +93,26 @@ async function registerRoute(req, res) {
   return res.render('error');
 }
 
-indexRouter.get('/', catchErrors(indexRoute));
+function redirectIfAdmin(req, res, next) {
+  console.log(req.user);
+  if (req.user?.isadmin) {
+    res.redirect('/admin');
+  } else next();
+}
+
+function ensureUserLoggedIn(req, res, next) {
+  console.log(req.user);
+  if (!req.user) {
+    res.redirect('/user/login');
+  } else next();
+}
+
+indexRouter.get('/', redirectIfAdmin, catchErrors(indexRoute));
 
 indexRouter.get('/:slug', catchErrors(eventRoute));
 indexRouter.post(
   '/:slug',
+  ensureUserLoggedIn,
   registrationValidationMiddleware('comment'),
   xssSanitizationMiddleware('comment'),
   catchErrors(validationCheck),
