@@ -161,7 +161,7 @@ async function registerRoute(req, res) {
 }
 
 async function updateRoute(req, res) {
-  const { name, description } = req.body;
+  const { name, description, url, location } = req.body;
   const { slug } = req.params;
 
   const event = await listEvent(slug);
@@ -172,6 +172,8 @@ async function updateRoute(req, res) {
     name,
     slug: newSlug,
     description,
+    url,
+    location,
   });
 
   console.log(updated);
@@ -184,7 +186,6 @@ async function updateRoute(req, res) {
   return res.render('error');
 }
 
-// TODO
 export function redirectIfNotAdmin(req, res, next) {
   // const { user: { username } = {} } = req || {};
   console.log(req.user);
@@ -193,13 +194,9 @@ export function redirectIfNotAdmin(req, res, next) {
   } else next();
 }
 
-// TODO: aðferð til að eyða viðburð
 async function deleteEventRoute(req, res, next) {
-  console.log('Delete attempt');
   const { slug } = req.params;
-  console.log(req.params.slug);
-  const result = await deleteEvent(slug);
-  console.log(result);
+  await deleteEvent(slug);
   next();
 }
 
@@ -229,9 +226,6 @@ async function eventRoute(req, res, next) {
 
 export async function checkIfAdminLogIn(req, res, next) {
   const userTryingToLogIn = await findByUsername(req.body.username);
-  // console.log(userTryingToLogIn);
-
-  console.log(userTryingToLogIn.id);
 
   if (!userTryingToLogIn || !userTryingToLogIn.isadmin) {
     res.render('login', {
@@ -284,8 +278,6 @@ adminRouter.get('/logout', (req, res) => {
   });
 });
 
-//!
-//TODO: Virkar að deleta ef maður er loggaður inn venjulega
 adminRouter.get(
   '/delete/:slug',
   ensureAdminLoggedIn,

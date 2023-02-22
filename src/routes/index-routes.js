@@ -21,11 +21,9 @@ async function pageRoute(req, res) {
   const { number } = req.params;
   const events = await getEventsByPage(number);
 
-  console.log(events);
-
   const { user: { username } = {} } = req || {};
-  const prev = parseInt(number) - 1;
-  const next = parseInt(number) + 1;
+  const prev = parseInt(number, 10) - 1;
+  const next = parseInt(number, 10) + 1;
   const body = {
     user: username,
     title: 'Viðburðasíðan',
