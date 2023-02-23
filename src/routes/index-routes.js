@@ -2,6 +2,7 @@ import express from 'express';
 import { validationResult } from 'express-validator';
 import { catchErrors } from '../lib/catch-errors.js';
 import {
+  deleteRegistration,
   getEventsByPage,
   listEvent,
   listEvents,
@@ -51,10 +52,12 @@ async function eventRoute(req, res, next) {
   }
 
   const registered = await listRegistered(event.id);
+  console.log(req.user?.id);
 
   return res.render('event', {
     title: `${event.name} — Viðburðasíðan`,
     event,
+    userId: req?.user?.id,
     registered,
     errors: [],
     data: {},
@@ -99,12 +102,18 @@ async function validationCheck(req, res, next) {
 }
 
 async function registerRoute(req, res) {
-  const { name, comment } = req.body;
+  const { comment, name } = req.body;
+  console.log(comment);
+
+  const userId = req.user.id;
+  console.log(userId);
+  console.log(name);
   const { slug } = req.params;
   const event = await listEvent(slug);
 
   const registered = await register({
     name,
+    userId,
     comment,
     event: event.id,
   });
@@ -117,22 +126,33 @@ async function registerRoute(req, res) {
 }
 
 function redirectIfAdmin(req, res, next) {
-  console.log(req.user);
   if (req.user?.isadmin) {
     res.redirect('/admin');
   } else next();
 }
 
 function ensureUserLoggedIn(req, res, next) {
-  console.log(req.user);
   if (!req.user) {
     res.redirect('/user/login');
   } else next();
 }
 
+// Skráir út viðkomandi sem er loggaður inn
+async function unregister(req, res) {
+  const { userId, slug } = req.params;
+
+  const intId = Number(userId);
+
+  await deleteRegistration({ userId: intId, slug });
+
+  return res.redirect(`/${slug}`);
+}
+
 indexRouter.get('/', redirectIfAdmin, catchErrors(indexRoute));
 indexRouter.get('/page/:number', pageRoute);
+indexRouter.get('/unregister/:slug/:userId', ensureUserLoggedIn, unregister);
 indexRouter.get('/:slug', catchErrors(eventRoute));
+
 indexRouter.post(
   '/:slug',
   ensureUserLoggedIn,

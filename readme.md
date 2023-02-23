@@ -1,6 +1,8 @@
-# Vef2 2022, verkefni 2 sýnilausn
+# Verkefni 2
 
-Sýnilausn á [verkefni 2](https://github.com/vefforritun/vef2-2022-v2).
+## Vefforritun 2 2023
+
+### Fork af Vef2 2022, verkefni 2 sýnilausn
 
 ```bash
 createdb vef2-2022-v2

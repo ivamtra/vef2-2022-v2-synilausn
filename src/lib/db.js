@@ -123,16 +123,16 @@ export async function deleteEvent(slug) {
   return null;
 }
 
-export async function register({ name, comment, event } = {}) {
+export async function register({ userId, name, comment, event } = {}) {
   const q = `
     INSERT INTO registrations
-      (name, comment, event)
+      (userId, name, comment, event)
     VALUES
-      ($1, $2, $3)
+      ($1, $2, $3, $4)
     RETURNING
       id, name, comment, event;
   `;
-  const values = [name, comment, event];
+  const values = [userId, name, comment, event];
   const result = await query(q, values);
 
   if (result && result.rowCount === 1) {
@@ -218,6 +218,7 @@ export async function end() {
   await pool.end();
 }
 
+//! LAGA SQL INJECTION
 export async function getEventsByPage(number) {
   // number = 1 gefur fyrstu síðuna
   const offset = 10 * (number - 1);
@@ -232,4 +233,37 @@ export async function getEventsByPage(number) {
   }
 
   return null;
+}
+
+//TODO
+export async function deleteRegistration({ userId, slug }) {
+  const q = `SELECT id
+              FROM REGISTRATIONS
+              WHERE userId = $1
+              AND event in (
+                SELECT id
+                FROM EVENTS
+                WHERE slug = $2
+              )`;
+  let values = [userId, slug];
+  console.log(values);
+  let result = await query(q, values);
+
+  try {
+    const { id } = result.rows[0];
+
+    const q2 = `DELETE FROM REGISTRATIONS
+             WHERE id = $1
+             RETURNING id, name, comment, event`;
+
+    values = [id];
+    result = await query(q2, values);
+    console.log(values);
+
+    if (result && result.rowCount === 1) {
+      return result.rows[0];
+    }
+  } catch {
+    return null;
+  }
 }

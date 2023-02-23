@@ -176,19 +176,14 @@ async function updateRoute(req, res) {
     location,
   });
 
-  console.log(updated);
-
   if (updated) {
     return res.redirect('/admin');
-    // return res.redirect(, '/admin');
   }
 
   return res.render('error');
 }
 
 export function redirectIfNotAdmin(req, res, next) {
-  // const { user: { username } = {} } = req || {};
-  console.log(req.user);
   if (!req.user?.isadmin || !req.user) {
     res.redirect('/');
   } else next();
@@ -278,6 +273,9 @@ adminRouter.get('/logout', (req, res) => {
   });
 });
 
+// Ætti að vera delete endpoint en það er enginn framendi
+// sem kallar á þetta.
+// Því er þetta get request til að hægt sé að deleta í UI.
 adminRouter.get(
   '/delete/:slug',
   ensureAdminLoggedIn,
