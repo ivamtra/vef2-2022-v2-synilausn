@@ -6,4 +6,6 @@
 
 // Innskráning á viðburði sem notandi
 
-// Notandi skráir sig á viðburð
+// ----------------------------
+
+// Notandi skráir sig af viðburð
