@@ -8,6 +8,7 @@ import {
   register,
   updateEvent,
 } from '../lib/db';
+import { createUser } from '../lib/users';
 
 dotenv.config({ path: './.env.test' });
 
@@ -68,16 +69,27 @@ describe('db', () => {
     expect(updated.description).toBe(null);
   });
 
-  it('allows registering to events', async () => {
+  //* Auka test
+  it('allows registering to events if user is logged in', async () => {
     const event = await createEvent({ name: 'e', slug: 'e' });
+    const user = await createUser('Ivan', 'password');
     const registration = await register({
       name: 'r',
       event: event.id,
-      userId: 2,
+      userId: user.id,
     });
 
-    // Ekki hægt að registera án þess að hafa user
-    expect(registration?.name).toBeFalsy();
+    expect(registration?.name).toBe('r');
+  });
+
+  //* Auka test
+  it('does not allow registering to events if user is not logged in', async () => {
+    const event = await createEvent({ name: 'event123', slug: 'event123' });
+    const registration = await register({
+      name: 'Ivanium',
+      event: event.id,
+    });
+    expect(registration).toBeFalsy();
   });
 
   it('does not allow registering to non existant event', async () => {

@@ -23,9 +23,7 @@ describe('Users', () => {
     await end();
   });
 
-  // Nýskráning sem notandi
-
-  // Testa db fall
+  // Nýskráning sem eðlilegur notandi
   it('Registers a new user as not admin', async () => {
     const result = await createUser('Ivan', '123');
 
