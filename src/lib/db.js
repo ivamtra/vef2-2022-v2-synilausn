@@ -218,15 +218,14 @@ export async function end() {
   await pool.end();
 }
 
-//! LAGA SQL INJECTION
 export async function getEventsByPage(number) {
   // number = 1 gefur fyrstu síðuna
-  const offset = 10 * (number - 1);
+  const offset = [10 * (number - 1)];
   const q = `SELECT id, name, slug, description, created, updated
               FROM events
               ORDER BY created
-              DESC LIMIT 10 OFFSET ${offset};`;
-  const result = await query(q);
+              DESC LIMIT 10 OFFSET $1;`;
+  const result = await query(q, offset);
 
   if (result) {
     return result.rows;
@@ -235,7 +234,7 @@ export async function getEventsByPage(number) {
   return null;
 }
 
-//TODO
+// eslint-disable-next-line consistent-return
 export async function deleteRegistration({ userId, slug }) {
   const q = `SELECT id
               FROM REGISTRATIONS
@@ -246,7 +245,6 @@ export async function deleteRegistration({ userId, slug }) {
                 WHERE slug = $2
               )`;
   let values = [userId, slug];
-  console.log(values);
   let result = await query(q, values);
 
   try {
@@ -258,8 +256,6 @@ export async function deleteRegistration({ userId, slug }) {
 
     values = [id];
     result = await query(q2, values);
-    console.log(values);
-
     if (result && result.rowCount === 1) {
       return result.rows[0];
     }

@@ -70,9 +70,14 @@ describe('db', () => {
 
   it('allows registering to events', async () => {
     const event = await createEvent({ name: 'e', slug: 'e' });
-    const registration = await register({ name: 'r', event: event.id });
+    const registration = await register({
+      name: 'r',
+      event: event.id,
+      userId: 2,
+    });
 
-    expect(registration.name).toEqual('r');
+    // Ekki hægt að registera án þess að hafa user
+    expect(registration?.name).toBeFalsy();
   });
 
   it('does not allow registering to non existant event', async () => {

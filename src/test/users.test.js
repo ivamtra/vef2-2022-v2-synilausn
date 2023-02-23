@@ -1,11 +1,65 @@
-// Nýskráning sem notandi
+// Testa db fallið fyrir paging
+import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import dotenv from 'dotenv';
+import {
+  createEvent,
+  createSchema,
+  deleteRegistration,
+  dropSchema,
+  end,
+  register,
+} from '../lib/db';
+import { createUser } from '../lib/users';
 
-// Testa db fall
+dotenv.config({ path: './.env.test' });
 
-// ----------------------------
+describe('Users', () => {
+  beforeAll(async () => {
+    await dropSchema();
+    await createSchema();
+  });
 
-// Innskráning á viðburði sem notandi
+  afterAll(async () => {
+    await end();
+  });
 
-// ----------------------------
+  // Nýskráning sem notandi
 
-// Notandi skráir sig af viðburð
+  // Testa db fall
+  it('Registers a new user as not admin', async () => {
+    const result = await createUser('Ivan', '123');
+
+    expect(result.isadmin).toBe(false);
+  });
+
+  // ----------------------------
+
+  // Innskráning á viðburði sem notandi er breytt í db.test.js
+  // Það þarf núna userId
+
+  // ----------------------------
+
+  // Notandi skráir sig af viðburð
+  it('Deletes registration if user exists', async () => {
+    // create user
+    const user = await createUser('Ivan2', '123');
+
+    // create event
+    const event = await createEvent({ name: 'name', slug: 'slug' });
+
+    // Register user to event
+
+    await register({
+      name: 'Ivan',
+      comment: 'comment',
+      userId: user.id,
+      event: event.id,
+    });
+
+    const result = await deleteRegistration({
+      userId: user.id,
+      slug: event.slug,
+    });
+    expect(result).toBeTruthy();
+  });
+});
