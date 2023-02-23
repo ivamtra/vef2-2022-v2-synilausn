@@ -33,6 +33,9 @@ describe('Events', () => {
       url: 'youtube.com',
     });
     expect(result).toBeTruthy();
+    expect(result.name).toBe('name');
+    expect(result.slug).toBe('slug');
+    expect(result.location).toBe('RVK');
   });
   // Update-a viðburð með auka gögnum
 

@@ -60,6 +60,8 @@ describe('Users', () => {
       userId: user.id,
       slug: event.slug,
     });
-    expect(result).toBeTruthy();
+    expect(result.id).toBe(1);
+    expect(result.event).toBe(1);
+    expect(result.name).toBe('Ivan');
   });
 });
