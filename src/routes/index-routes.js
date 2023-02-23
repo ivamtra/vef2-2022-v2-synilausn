@@ -19,12 +19,23 @@ export const indexRouter = express.Router();
 
 // Tengja við paging
 async function pageRoute(req, res) {
-  const { number } = req.params;
+  const number = Number(req.params.number);
   const events = await getEventsByPage(number);
 
   const { user: { username } = {} } = req || {};
-  const prev = parseInt(number, 10) - 1;
-  const next = parseInt(number, 10) + 1;
+
+  // Ef sýna á til baka ör
+  const showBackArrow = number > 1;
+
+  const eventsNext = await getEventsByPage(number + 1);
+  // Ef sýna á áfram ör
+  const showNextArrow = eventsNext.length !== 0;
+
+  console.log(showBackArrow);
+  console.log(showNextArrow);
+
+  const prev = number - 1;
+  const next = number + 1;
   const body = {
     user: username,
     title: 'Viðburðasíðan',
@@ -32,6 +43,8 @@ async function pageRoute(req, res) {
     events,
     prev,
     next,
+    showBackArrow,
+    showNextArrow,
     loginInfo: `Skráður inn sem ${username}`,
   };
   if (!username) body.loginInfo = 'Ekki skráður inn';

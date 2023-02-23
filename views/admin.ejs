@@ -4,13 +4,18 @@
 
 <%- include('events') -%>
 
-<a class="link" href="/admin/page/<%= prev %>">
-  Fyrri síða
-</a>
+<%if (showBackArrow) {%>
+  <a class="link" href="/page/<%= prev %>">
+    Fyrri síða
+  </a>
 
-<a class="link" href="/admin/page/<%= next %>">
-  Næsta síða
-</a>
+<% } %>
+
+<%if (showNextArrow) {%>
+  <a class="link" href="/page/<%= next %>">
+    Næsta síða
+  </a>
+<% } %>
 
 <div class="event__registration">
   <h2 class="event__subtitle">Nýr viðburður</h2>

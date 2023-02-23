@@ -28,19 +28,26 @@ async function adminPageRoute(req, res) {
   // Sýna admin síðuna
   // Annars
   // Redirect á venjulega síðu
-
-  const { number } = req.params;
+  const number = parseInt(req.params.number, 10);
   const events = await getEventsByPage(number);
   const { user: { username } = {} } = req || {};
 
-  const prev = parseInt(number, 10) - 1;
-  const next = parseInt(number, 10) + 1;
+  const prev = number - 1;
+  const next = number + 1;
+
+  // Ef sýna á til baka ör
+  const showBackArrow = number > 1;
+
+  const eventsNext = await getEventsByPage(number + 1);
+  const showNextArrow = eventsNext.length !== 0;
 
   return res.render('admin', {
     username,
     events,
     prev,
     next,
+    showBackArrow,
+    showNextArrow,
     errors: [],
     data: {},
     title: 'Viðburðir — umsjón',
